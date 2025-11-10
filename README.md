@@ -12,6 +12,8 @@ This repository is designed for developers learning HTML to:
 
 ## 🚀 Quick Start
 
+**New here?** Check out the [Quick Start Guide](./QUICKSTART.md) for a complete walkthrough!
+
 1. **Fork this repository** to your GitHub account
 2. Follow the [Step-by-Step Tutorial](./docs/TUTORIAL.md) to build your Cat Photo App
 3. Host your app using [GitHub Pages Guide](./docs/GITHUB_PAGES.md)
@@ -22,14 +24,17 @@ This repository is designed for developers learning HTML to:
 ```
 html-cat-photo-app/
 ├── README.md                 # You are here!
+├── QUICKSTART.md            # Fast-track guide to contributing
 ├── CONTRIBUTING.md          # How to contribute your Cat Photo App
 ├── docs/
 │   ├── TUTORIAL.md          # Step-by-step building instructions
-│   └── GITHUB_PAGES.md      # How to deploy with GitHub Pages
+│   ├── GITHUB_PAGES.md      # How to deploy with GitHub Pages
+│   └── MODERATOR_GUIDE.md   # Guide for repository moderators
 ├── submissions/             # Community contributions
 │   └── example/             # Example submission
 └── .github/
     ├── workflows/           # Automated guidance bots
+    ├── ISSUE_TEMPLATE/      # Templates for questions, bugs, features
     └── PULL_REQUEST_TEMPLATE.md
 ```
 
