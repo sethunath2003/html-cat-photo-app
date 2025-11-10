@@ -1,0 +1,12 @@
+# Cat Photo App Moderators
+# These users will be automatically requested for review on PRs
+
+# All submissions require moderator approval
+/submissions/ @sethunath2003
+
+# Documentation changes
+/docs/ @sethunath2003
+*.md @sethunath2003
+
+# GitHub Actions and workflows
+/.github/ @sethunath2003

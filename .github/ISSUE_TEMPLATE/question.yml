@@ -1,0 +1,50 @@
+name: ❓ Question
+description: Ask a question about the Cat Photo App tutorial or contribution process
+title: "[Question] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 👋 Welcome!
+        
+        Thanks for reaching out! Please provide details about your question so we can help you better.
+        
+  - type: dropdown
+    id: question-type
+    attributes:
+      label: What is your question about?
+      options:
+        - Building the Cat Photo App
+        - Setting up GitHub Pages
+        - Contributing/Submitting
+        - Git and GitHub
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: "I'm having trouble with..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: context
+    attributes:
+      label: What have you tried?
+      description: Let us know what you've already attempted or researched
+      placeholder: "I tried... but..."
+      
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before asking
+      description: Please confirm you've done the following
+      options:
+        - label: I've read the [README.md](https://github.com/sethunath2003/html-cat-photo-app/blob/main/README.md)
+        - label: I've checked the [TUTORIAL.md](https://github.com/sethunath2003/html-cat-photo-app/blob/main/docs/TUTORIAL.md) documentation
+        - label: I've searched existing issues for similar questions
