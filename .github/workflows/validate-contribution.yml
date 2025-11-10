@@ -1,0 +1,207 @@
+name: Welcome and Validate Contribution
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'submissions/**'
+
+jobs:
+  welcome-and-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get PR author
+        id: pr_info
+        run: |
+          echo "author=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+      
+      - name: Welcome new contributor
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const author = '${{ steps.pr_info.outputs.author }}';
+            const welcomeMessage = `
+            ## 🎉 Welcome to Cat Photo App Community, @${author}!
+            
+            Thank you for your contribution! I'm the automated helper bot, and I'm here to guide you through the process.
+            
+            ### 📋 What happens next?
+            
+            1. **Automated Validation** ✅ - I'll check your submission (running now...)
+            2. **Moderator Review** 👀 - A human will review your work
+            3. **Feedback** 💬 - You may receive comments or change requests
+            4. **Merge** 🎊 - Once approved, your contribution will be merged!
+            
+            ### 🤖 Automated Checks
+            
+            I'm currently validating:
+            - ✓ Folder structure compliance
+            - ✓ Required files present
+            - ✓ File naming conventions
+            - ✓ README completeness
+            
+            Results will appear below shortly...
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: welcomeMessage
+            });
+      
+      - name: Validate submission structure
+        id: validate
+        run: |
+          echo "## 🔍 Validation Results" > validation_report.md
+          echo "" >> validation_report.md
+          
+          AUTHOR="${{ steps.pr_info.outputs.author }}"
+          SUBMISSION_DIR="submissions/${AUTHOR}"
+          
+          VALIDATION_PASSED=true
+          
+          # Check if submission folder exists with correct name
+          if [ -d "$SUBMISSION_DIR" ]; then
+            echo "✅ **Folder Structure**: Correct folder name \`$SUBMISSION_DIR\`" >> validation_report.md
+          else
+            echo "❌ **Folder Structure**: Folder should be named \`submissions/${AUTHOR}/\`" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "**Found folders:**" >> validation_report.md
+            ls -la submissions/ | grep "^d" | awk '{print "- " $NF}' | grep -v "^\.$" | grep -v "^\.\.$" >> validation_report.md
+            VALIDATION_PASSED=false
+          fi
+          
+          # Check for index.html
+          if [ -f "$SUBMISSION_DIR/index.html" ]; then
+            echo "✅ **index.html**: Found" >> validation_report.md
+          else
+            echo "❌ **index.html**: Missing (required)" >> validation_report.md
+            VALIDATION_PASSED=false
+          fi
+          
+          # Check for README.md
+          if [ -f "$SUBMISSION_DIR/README.md" ]; then
+            echo "✅ **README.md**: Found" >> validation_report.md
+            
+            # Check README content
+            if grep -q "Live Demo" "$SUBMISSION_DIR/README.md"; then
+              echo "  - ✅ Contains Live Demo section" >> validation_report.md
+            else
+              echo "  - ⚠️ Should include Live Demo link" >> validation_report.md
+            fi
+            
+            if grep -q "github.io" "$SUBMISSION_DIR/README.md" || grep -q "GitHub Pages" "$SUBMISSION_DIR/README.md"; then
+              echo "  - ✅ Contains GitHub Pages URL" >> validation_report.md
+            else
+              echo "  - ⚠️ Should include GitHub Pages URL" >> validation_report.md
+            fi
+          else
+            echo "❌ **README.md**: Missing (required)" >> validation_report.md
+            VALIDATION_PASSED=false
+          fi
+          
+          # Check HTML content basics
+          if [ -f "$SUBMISSION_DIR/index.html" ]; then
+            if grep -q "<!DOCTYPE html>" "$SUBMISSION_DIR/index.html"; then
+              echo "✅ **HTML Structure**: Contains DOCTYPE declaration" >> validation_report.md
+            else
+              echo "⚠️ **HTML Structure**: Missing DOCTYPE declaration" >> validation_report.md
+            fi
+            
+            if grep -qi "cat" "$SUBMISSION_DIR/index.html"; then
+              echo "✅ **Content**: Contains cat-related content" >> validation_report.md
+            else
+              echo "⚠️ **Content**: Should be about cats" >> validation_report.md
+            fi
+          fi
+          
+          echo "" >> validation_report.md
+          
+          if [ "$VALIDATION_PASSED" = true ]; then
+            echo "### ✅ All Required Checks Passed!" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "Your submission structure looks good! A moderator will review your content soon." >> validation_report.md
+            echo "validation_status=passed" >> $GITHUB_OUTPUT
+          else
+            echo "### ❌ Action Required" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "Please fix the issues above and update your PR. The checks will run automatically when you push changes." >> validation_report.md
+            echo "" >> validation_report.md
+            echo "**Need help?** Check out:" >> validation_report.md
+            echo "- [Contributing Guide](../CONTRIBUTING.md)" >> validation_report.md
+            echo "- [Tutorial](../docs/TUTORIAL.md)" >> validation_report.md
+            echo "validation_status=failed" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "validation_passed=$VALIDATION_PASSED" >> $GITHUB_OUTPUT
+      
+      - name: Post validation results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const validationReport = fs.readFileSync('validation_report.md', 'utf8');
+            const validationPassed = '${{ steps.validate.outputs.validation_passed }}' === 'true';
+            
+            let finalMessage = validationReport + '\n\n';
+            
+            if (validationPassed) {
+              finalMessage += `### 🎯 Next Steps\n\n`;
+              finalMessage += `1. **Test Your Live Site** - Make sure your GitHub Pages URL works\n`;
+              finalMessage += `2. **Wait for Review** - A moderator will review your submission\n`;
+              finalMessage += `3. **Respond to Feedback** - Address any comments from reviewers\n\n`;
+              finalMessage += `### 📚 While You Wait\n\n`;
+              finalMessage += `- Check out other submissions in the \`submissions/\` folder\n`;
+              finalMessage += `- Share your live URL on social media\n`;
+              finalMessage += `- Continue learning with more freeCodeCamp courses\n`;
+            } else {
+              finalMessage += `### 🔧 How to Fix\n\n`;
+              finalMessage += `1. Make the necessary changes in your fork\n`;
+              finalMessage += `2. Commit and push the changes\n`;
+              finalMessage += `3. The PR will update automatically and I'll re-check\n\n`;
+              finalMessage += `**Pro tip**: Make sure your folder is named exactly \`submissions/${{ github.event.pull_request.user.login }}/\`\n`;
+            }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: finalMessage
+            });
+      
+      - name: Add labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const validationPassed = '${{ steps.validate.outputs.validation_passed }}' === 'true';
+            const labels = ['contribution'];
+            
+            if (validationPassed) {
+              labels.push('ready-for-review');
+            } else {
+              labels.push('needs-changes');
+            }
+            
+            // Add labels if they exist
+            for (const label of labels) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  labels: [label]
+                });
+              } catch (error) {
+                console.log(`Label "${label}" doesn't exist yet, skipping...`);
+              }
+            }
